@@ -1,0 +1,668 @@
+@use "tokens" as *;
+
+// ---- Base -----------------------------------------------------------------------
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,
+body { margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 400 1rem/1.4 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input { font: inherit; color: inherit; }
+
+.sr-only { @include visually-hidden; }
+
+// ---- Layout: the masthead on top, the guide filling the rest ---------------------
+
+.app {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+}
+
+.app__main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  min-height: 0;
+  padding: 0 1.25rem 1.25rem;
+
+  @include phone { padding: 0 0.5rem 0.5rem; }
+}
+
+// ---- Masthead -------------------------------------------------------------------
+
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+
+  @include phone { padding: 0.75rem 0.75rem; gap: 0.75rem; }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 auto 0 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  // The logo: a dot with two arcs of signal radiating from it.
+  &__logo {
+    width: 1.6rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 25% 75%, var(--accent) 0 18%, transparent 19%),
+      radial-gradient(circle at 25% 75%, transparent 0 38%, var(--accent) 39% 48%, transparent 49%),
+      radial-gradient(circle at 25% 75%, transparent 0 66%, var(--accent) 67% 76%, transparent 77%);
+  }
+
+  &__sub {
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+
+    @include phone { display: none; }
+  }
+
+  &__clock {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__now {
+    padding: 0.5rem 1rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.2s;
+
+    &:hover { filter: brightness(1.1); }
+    &:focus-visible { @include focus-ring; }
+  }
+}
+
+// ---- Toolbar: the day picker and the genre filters ---------------------------------
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  min-width: 0;
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.days {
+  display: flex;
+  gap: 0.25rem;
+  max-width: 100%;
+  padding: 0.25rem;
+  overflow-x: auto;
+  border-radius: calc(var(--radius) + 0.25rem);
+  background: var(--surface);
+  scrollbar-width: none;
+
+  &__day {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    flex: none;
+    min-width: 3.5rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--radius);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+
+    &:hover { color: var(--text); background: var(--surface-2); }
+
+    &:has(:checked) {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    &:has(:focus-visible) { @include focus-ring; }
+  }
+
+  &__input { @include hidden-control; }
+
+  &__name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__date {
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.genres {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1 1 20rem;
+
+  &__legend {
+    float: left; // A legend only joins the flex row when it floats.
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  &__list {
+    display: flex;
+    gap: 0.35rem;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0.2rem;
+  }
+
+  &__chip {
+    position: relative;
+    flex: none;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+
+    &:hover { color: var(--text); border-color: var(--muted); }
+
+    &:has(:checked) {
+      background: var(--text);
+      border-color: var(--text);
+      color: var(--bg);
+    }
+
+    &:has(:focus-visible) { @include focus-ring; }
+  }
+
+  &__input { @include hidden-control; }
+
+  &__clear {
+    flex: none;
+    padding: 0.3rem 0.5rem;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover { color: var(--text); }
+    &:focus-visible { @include focus-ring; }
+  }
+}
+
+// ---- The guide ----------------------------------------------------------------------
+// One scroll box, both ways. The time ruler sticks to its top and the channel
+// column to its left; programmes are placed along each row by start time.
+
+.guide {
+  --ppm: 4px; // Pixels a minute: an hour is 240px.
+  --channel-w: 11rem;
+  --ruler-h: 2.5rem;
+  --row-h: 4.75rem;
+  --day-w: calc(var(--ppm) * 1440);
+
+  position: relative;
+  align-self: start; // As tall as its rows, up to the space there is.
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 0.25rem);
+  background: var(--surface);
+  // Keyboard focus scrolls programmes clear of the sticky ruler and column.
+  scroll-padding: var(--ruler-h) 0 0 var(--channel-w);
+
+  @include phone {
+    --ppm: 3px;
+    --channel-w: 4rem;
+    --row-h: 4.25rem;
+  }
+
+  &__ruler {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    width: calc(var(--channel-w) + var(--day-w));
+    height: var(--ruler-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  &__corner {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    flex: none;
+    width: var(--channel-w);
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+  }
+
+  &__marks {
+    position: relative;
+    flex: none;
+    width: var(--day-w);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__mark {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--ppm) * var(--at));
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--line-strong);
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+
+    &--half {
+      border-left-color: var(--line);
+      font-weight: 400;
+      color: var(--muted);
+    }
+  }
+
+  &__now-flag {
+    position: absolute;
+    bottom: 0.3rem;
+    left: calc(var(--channel-w) + var(--ppm) * var(--at));
+    z-index: 0;
+    margin: 0;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    translate: -50% 0;
+  }
+
+  &__body {
+    position: relative;
+    width: calc(var(--channel-w) + var(--day-w));
+  }
+
+  &__row {
+    display: flex;
+    height: var(--row-h);
+    border-bottom: 1px solid var(--line);
+
+    &:last-of-type { border-bottom: 0; }
+  }
+
+  &__track {
+    position: relative;
+    flex: none;
+    width: var(--day-w);
+  }
+
+  // The line at the current time, under the channel column when it scrolls past.
+  &__now {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--channel-w) + var(--ppm) * var(--at));
+    z-index: 1;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    pointer-events: none;
+  }
+}
+
+// ---- A channel's row header -------------------------------------------------------
+
+.channel {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: none;
+  width: var(--channel-w);
+  padding: 0 0.85rem;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+
+  @include phone { justify-content: center; padding: 0; }
+
+  &__mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.4rem;
+    aspect-ratio: 1;
+    border-radius: 0.6rem;
+    background: var(--channel);
+    color: #0b0f1a;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  &__text {
+    display: grid;
+    min-width: 0;
+
+    @include phone { @include visually-hidden; }
+  }
+
+  &__name {
+    overflow: hidden;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__number {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ---- A programme --------------------------------------------------------------------
+
+.slot {
+  position: absolute;
+  top: 0.3rem;
+  bottom: 0.3rem;
+  left: calc(var(--ppm) * var(--start) + 2px);
+  width: calc(var(--ppm) * var(--length) - 4px);
+
+  &__button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; // The label is only as wide as its text, so it has room to slide.
+    width: 100%;
+    height: 100%;
+    padding: 0.4rem 0.75rem 0.4rem 0.85rem;
+    // Clip rather than hide, so it isn't a scroll box and the label can stick.
+    overflow: clip;
+    border: 0;
+    border-radius: 0.5rem;
+    background: var(--surface-2);
+    box-shadow: inset 3px 0 0 var(--channel);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s, opacity 0.2s;
+
+    &:hover { background: var(--surface-3); }
+    &:focus-visible { @include focus-ring(1px); z-index: 1; }
+  }
+
+  // The title and time stay in view at the channel column while a programme
+  // that started earlier scrolls under it, as on a set-top box guide.
+  &__label {
+    position: sticky;
+    left: calc(var(--channel-w) + 0.85rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  &__title {
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__time {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__new {
+    padding: 0 0.3rem;
+    color: var(--text);
+    border-radius: 0.25rem;
+    background: var(--line-strong);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  // On now: tinted in the channel's colour, with a bar showing how far in it is.
+  &.is-live &__button {
+    background: color-mix(in srgb, var(--channel) 22%, var(--surface-2));
+
+    &:hover { background: color-mix(in srgb, var(--channel) 30%, var(--surface-2)); }
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--channel);
+      transform: scaleX(var(--progress));
+      transform-origin: left;
+    }
+  }
+
+  &.is-past &__button {
+    background: color-mix(in srgb, var(--surface-2) 45%, var(--surface));
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--channel) 40%, transparent);
+  }
+
+  &.is-past &__title { color: var(--muted); }
+
+  &.is-dimmed &__button { opacity: 0.22; }
+
+  &.is-narrow &__button { padding-inline: 0.5rem 0.25rem; }
+  &.is-narrow &__time,
+  &.is-narrow &__new { display: none; }
+}
+
+// ---- Details dialog ------------------------------------------------------------------
+
+.details {
+  width: min(32rem, calc(100% - 2rem));
+  padding: 0;
+  border: 0;
+  border-top: 4px solid var(--channel);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.8);
+
+  &[open] { animation: rise 0.3s var(--ease-out); }
+
+  &::backdrop {
+    background: rgb(4 6 12 / 0.7);
+    backdrop-filter: blur(4px);
+  }
+
+  @include less-motion {
+    &[open] { animation: none; }
+  }
+
+  &__inner {
+    display: grid;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  &__head { display: grid; gap: 0.35rem; }
+
+  &__channel {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+
+    .channel__mark { width: 2rem; font-size: 0.75rem; }
+  }
+
+  &__number { color: var(--muted); font-weight: 400; }
+
+  &__title {
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  &__episode {
+    margin: 0;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  &__when {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__length { font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+
+  &__live {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    color: var(--channel);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__progress {
+    flex: 1;
+    height: 4px;
+    border: 0;
+    border-radius: 2px;
+    background: var(--surface-3);
+    appearance: none;
+
+    &::-webkit-progress-bar { background: var(--surface-3); border-radius: 2px; }
+    &::-webkit-progress-value { background: var(--channel); border-radius: 2px; }
+    &::-moz-progress-bar { background: var(--channel); border-radius: 2px; }
+  }
+
+  &__blurb { margin: 0; line-height: 1.55; }
+
+  &__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 0;
+
+    dt {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    dd { margin: 0; }
+  }
+
+  &__flags {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__flag {
+    padding: 0.1rem 0.45rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+
+    abbr { text-decoration: none; }
+
+    &--new { background: var(--text); border-color: var(--text); color: var(--bg); }
+  }
+
+  &__actions { display: flex; justify-content: flex-end; margin: 0; }
+
+  &__close {
+    padding: 0.55rem 1.2rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--surface-2);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover { background: var(--surface-3); }
+    &:focus-visible { @include focus-ring; }
+  }
+}
+
+@keyframes rise {
+  from { opacity: 0; translate: 0 1rem; }
+}
