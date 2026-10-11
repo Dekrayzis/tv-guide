@@ -2,6 +2,12 @@
 
 A TV guide for eight made-up channels, with a full week of listings that's generated in the browser.
 
+**[Open the live guide](https://dekrayzis.github.io/tv-guide/)**
+
+![The guide: eight channels down the side, the afternoon across the top, programmes with drawn artwork, and a red line at the current time](docs/guide.webp)
+
+![Teletext mode: Brightside's listings on page 603, with the programme on now highlighted, the Fastext keys along the bottom and a remote beside the screen](docs/teletext.webp)
+
 - **A schedule for any day.** Each channel splits its day into dayparts (breakfast, daytime, prime time, overnight) with a list of shows for each. A seeded generator fills 06:00 to 06:00 from those lists, so a given date always gets the same listings, for every visitor, with no server.
 - **The grid.** Channels run down the side and time runs across the top. Each programme is sized to its length, and a live line marks the current time. The ruler and the channel column stay put while you scroll, and a title stays in view while its programme scrolls under the channel column.
 - **Keyboard first.** It's an ARIA grid with a single tab stop:
