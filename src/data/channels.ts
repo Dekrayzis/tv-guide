@@ -56,6 +56,7 @@ const signalOne: Channel = {
   mark: "S1",
   colour: "#e8463a",
   tagline: "News, drama and the big Saturday night.",
+  category: "News & drama",
   dayparts: [
     { from: "06:00", shows: [show("Signal Breakfast", "news", [180], ["News, sport, weather and the day's talking points from the sofa."], { alwaysNew: true })] },
     {
@@ -133,6 +134,7 @@ const northlight: Channel = {
   mark: "NL",
   colour: "#3d7cf0",
   tagline: "Drama after dark, and a film every night.",
+  category: "Drama & film",
   dayparts: [
     { from: "06:00", shows: [coastguard, saltmarsh, wardNine] },
     { from: "12:00", shows: films },
@@ -169,6 +171,7 @@ const brightside: Channel = {
   mark: "BS",
   colour: "#f2b72c",
   tagline: "Comedy, quizzes and the shows everyone's talking about.",
+  category: "Entertainment",
   dayparts: [
     { from: "06:00", shows: [flatSix, kevin, show("The Allotment", "comedy", [30], ["Feuds, marrows and a scarecrow competition that gets out of hand."], { episodes: ["Marrow Escape", "Slug Wars", "First Frost"] })] },
     {
@@ -195,6 +198,7 @@ const atlas: Channel = {
   mark: "AT",
   colour: "#2fb68a",
   tagline: "The planet, the past and how things work.",
+  category: "Factual",
   dayparts: [
     {
       from: "06:00",
@@ -234,6 +238,7 @@ const pitchside: Channel = {
   mark: "PS",
   colour: "#7cc242",
   tagline: "Live sport, highlights and the debate after.",
+  category: "Sport",
   dayparts: [
     {
       from: "06:00",
@@ -291,6 +296,7 @@ const tumbletime: Channel = {
   mark: "TT",
   colour: "#ff6fae",
   tagline: "Cartoons and stories from sunrise to bedtime.",
+  category: "Children's",
   dayparts: [
     { from: "06:00", shows: kidsDay },
     {
@@ -322,6 +328,7 @@ const rewind: Channel = {
   mark: "RW",
   colour: "#b48cff",
   tagline: "The best of British telly, again.",
+  category: "Classic TV",
   dayparts: [
     {
       from: "06:00",
@@ -375,6 +382,7 @@ const pulse: Channel = {
   mark: "PL",
   colour: "#14c4dc",
   tagline: "Music videos, live sets and games culture.",
+  category: "Music & games",
   dayparts: [
     {
       from: "06:00",

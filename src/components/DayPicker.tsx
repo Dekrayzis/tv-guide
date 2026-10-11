@@ -1,5 +1,5 @@
 const weekday = new Intl.DateTimeFormat("en-GB", { weekday: "short" });
-const dayOfMonth = new Intl.DateTimeFormat("en-GB", { day: "numeric" });
+const shortDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
 const full = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
 type Props = {
@@ -18,7 +18,7 @@ export function DayPicker({ days, value, onChange }: Props) {
           <input type="radio" name="day" className="days__input" checked={value === i} onChange={() => onChange(i)} />
           <span className="days__name">{i === 0 ? "Today" : weekday.format(day)}</span>
           <span className="days__date" aria-hidden="true">
-            {dayOfMonth.format(day)}
+            {shortDate.format(day)}
           </span>
           <span className="sr-only">, {full.format(day)}</span>
         </label>

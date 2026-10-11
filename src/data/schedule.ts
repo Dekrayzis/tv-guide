@@ -43,16 +43,19 @@ export function scheduleFor(channel: Channel, dayKey: string): Programme[] {
 function listing(channel: Channel, dayKey: string, s: Show, start: number, end: number, rand: Rand): Programme {
   const inPrime = start >= PRIME[0] && start < PRIME[1];
   const episodeIndex = s.episodes ? Math.floor(rand() * s.episodes.length) : -1;
+  // A show keeps the same series number all week; the episode is its place in the list.
+  const seriesNumber = 1 + (hash(s.title) % 7);
   return {
     id: `${channel.id}-${dayKey}-${start}`,
     channelId: channel.id,
+    dayKey,
     title: s.title,
     genre: s.genre,
     start,
     end,
     episode: s.episodes?.[episodeIndex],
-    // A show keeps the same series number all week; the episode is its place in the list.
-    series: s.episodes ? `Series ${1 + (hash(s.title) % 7)}, episode ${episodeIndex + 1}` : undefined,
+    series: s.episodes ? `Series ${seriesNumber}, episode ${episodeIndex + 1}` : undefined,
+    seriesTag: s.episodes ? `S${seriesNumber} E${episodeIndex + 1}` : undefined,
     blurb: pick(rand, s.blurbs),
     isNew: s.alwaysNew || (s.genre !== "film" && rand() < (inPrime ? 0.6 : 0.15)),
     subtitles: rand() < 0.9,

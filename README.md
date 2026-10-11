@@ -8,7 +8,10 @@ A TV guide for eight made-up channels, with a full week of listings that's gener
   - The arrow keys move between programmes. Up and down keep to the same time.
   - Home and End go to either end of a channel's day.
   - Enter opens a programme's details.
-- **Filters.** You can pick a day of the week and highlight genres.
+- **Filters.** You can pick a day of the week, highlight genres, and search titles, episodes and channels. Enter in the search box jumps to the next match.
+- **Artwork.** Every show has a picture drawn in code, a scene for its genre varied by its title. Each channel has its own logo.
+- **Favourites.** Starred channels move to the top, and the browser remembers them.
+- **Details.** Opening a programme shows its art, how long is left (or until it starts), what's next on the channel, and when else it's on this week.
 - **Teletext mode.** The same listings as a 1980s teletext service, with page numbers in the URL so Back works:
   - **Pages:** 600 is the index, 601–608 each channel today, 611–618 tomorrow, 609 now and next, and 690 a quiz about tonight's schedule.
   - **Layout:** 40 × 25 characters of pixel font, stretched to a 4:3 screen, with double-height titles and mosaic block lettering.

@@ -6,7 +6,7 @@ type Props = {
   onChange: (genres: ReadonlySet<Genre>) => void;
 };
 
-/** Genres to highlight. With none ticked, everything shows at full strength. */
+/** Genres to highlight; any number at once. "All" clears them, so everything shows at full strength. */
 export function GenreFilter({ value, onChange }: Props) {
   const toggle = (genre: Genre) => {
     const next = new Set(value);
@@ -16,20 +16,16 @@ export function GenreFilter({ value, onChange }: Props) {
 
   return (
     <fieldset className="genres">
-      <legend className="genres__legend">Highlight</legend>
-      <div className="genres__list">
-        {GENRE_IDS.map((genre) => (
-          <label key={genre} className="genres__chip">
-            <input type="checkbox" className="genres__input" checked={value.has(genre)} onChange={() => toggle(genre)} />
-            {GENRES[genre]}
-          </label>
-        ))}
-      </div>
-      {value.size > 0 && (
-        <button type="button" className="genres__clear" onClick={() => onChange(new Set())}>
-          Clear
-        </button>
-      )}
+      <legend className="sr-only">Highlight genres</legend>
+      <button type="button" className="genres__chip genres__all" aria-pressed={value.size === 0} onClick={() => onChange(new Set())}>
+        All
+      </button>
+      {GENRE_IDS.map((genre) => (
+        <label key={genre} className="genres__chip">
+          <input type="checkbox" className="genres__input" checked={value.has(genre)} onChange={() => toggle(genre)} />
+          {GENRES[genre]}
+        </label>
+      ))}
     </fieldset>
   );
 }

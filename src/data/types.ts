@@ -30,8 +30,10 @@ export type Channel = {
   /** A short mark for the logo tile, two or three characters. */
   mark: string;
   colour: string;
-  /** What the channel is about, for its tooltip and the details dialog. */
+  /** What the channel is about, for the details dialog. */
   tagline: string;
+  /** A word or two under the name in the guide, e.g. "Nature". */
+  category: string;
   dayparts: readonly Daypart[];
 };
 
@@ -39,6 +41,8 @@ export type Channel = {
 export type Programme = {
   id: string;
   channelId: string;
+  /** The broadcast day it's in, "2026-10-11". */
+  dayKey: string;
   title: string;
   genre: Genre;
   start: number;
@@ -46,6 +50,8 @@ export type Programme = {
   episode?: string;
   /** e.g. "Series 3, episode 4". */
   series?: string;
+  /** The same, short, for the grid: "S3 E4". */
+  seriesTag?: string;
   blurb: string;
   isNew: boolean;
   subtitles: boolean;
