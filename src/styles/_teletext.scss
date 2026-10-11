@@ -112,7 +112,7 @@
   }
 }
 
-@each $name in red, green, yellow, blue, magenta, cyan, white {
+@each $name in "red", "green", "yellow", "blue", "magenta", "cyan", "white" {
   .tt-#{$name} { color: var(--tt-#{$name}); }
 }
 
