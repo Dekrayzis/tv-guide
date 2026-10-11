@@ -11,6 +11,8 @@ const ROTATE_MS = 12_000;
 /** How long the header counter rolls before a page "arrives". */
 const SEARCH_MS = 700;
 const FASTEXT: readonly Colour[] = ["red", "green", "yellow", "cyan"];
+/** The remote's Fastext keys: the fourth is blue on the remote, shown in cyan on screen. */
+const KEY_NAMES = ["Red", "Green", "Yellow", "Blue"];
 const KEYPAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
 
 const lessMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -166,6 +168,18 @@ export function Teletext({ page, go, now }: Props) {
       </div>
 
       <div className="remote" role="group" aria-label="Remote control">
+        <ul className="remote__fastext">
+          {data.fastext.map((f, i) => (
+            <li key={i}>
+              <a
+                href={`#${f.page}`}
+                className={`remote__colour remote__colour--${KEY_NAMES[i].toLowerCase()}`}
+                aria-label={`${KEY_NAMES[i]}: ${f.label}`}
+                title={f.label}
+              />
+            </li>
+          ))}
+        </ul>
         <div className="remote__keypad">
           {KEYPAD.map((digit) => (
             <button key={digit} type="button" className="remote__key" onClick={() => press(digit)}>
