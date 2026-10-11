@@ -9,6 +9,11 @@ A TV guide for eight made-up channels, with a full week of listings that's gener
   - Home and End go to either end of a channel's day.
   - Enter opens a programme's details.
 - **Filters.** You can pick a day of the week and highlight genres.
+- **Teletext mode.** The same listings as a 1980s teletext service, with page numbers in the URL so Back works:
+  - **Pages:** 600 is the index, 601–608 each channel today, 611–618 tomorrow, 609 now and next, and 690 a quiz about tonight's schedule.
+  - **Layout:** 40 × 25 characters of pixel font, stretched to a 4:3 screen, with double-height titles and mosaic block lettering.
+  - **Behaviour:** the header counter rolls while a page is found, subpages turn over by themselves until you press Hold, the quiz answers stay concealed until Reveal, and the four Fastext keys run along the bottom.
+  - **Controls:** type a page number on the keyboard or the on-screen remote.
 
 ## Running it
 
@@ -27,4 +32,5 @@ npm run dev
 | `src/data/schedule.ts` | The seeded generator that turns those into a day's listings |
 | `src/lib/` | Time helpers, the seeded random generator, and a ticking clock hook |
 | `src/components/` | The grid, the day picker, the genre filters and the details dialog |
+| `src/teletext/` | Teletext mode: the pages, the mosaic lettering and the set with its remote |
 | `src/styles/` | Sass: tokens and the app's styles |

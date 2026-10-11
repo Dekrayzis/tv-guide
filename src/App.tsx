@@ -8,6 +8,9 @@ import { DayPicker } from "./components/DayPicker";
 import { GenreFilter } from "./components/GenreFilter";
 import { Guide, type GuideHandle } from "./components/Guide";
 import { DetailsDialog } from "./components/DetailsDialog";
+import { useHashPage } from "./lib/useHashPage";
+import { Teletext } from "./teletext/Teletext";
+import { INDEX, NOW_NEXT } from "./teletext/pages";
 
 const WEEK = 7;
 
@@ -27,6 +30,8 @@ export function App() {
   const [genres, setGenres] = useState<ReadonlySet<Genre>>(new Set());
   const [open, setOpen] = useState<Programme | null>(null);
   const guide = useRef<GuideHandle>(null);
+  const [page, go] = useHashPage();
+  const teletext = page !== null;
 
   const day = days[dayIndex];
   const key = dayKey(day);
@@ -35,6 +40,7 @@ export function App() {
   const nowMinutes = dayIndex === 0 ? minutesInto(day, now) : null;
 
   const jumpToNow = () => {
+    if (teletext) return go(NOW_NEXT);
     if (dayIndex !== 0) setDayIndex(0);
     // Wait for the day to render before scrolling to it.
     requestAnimationFrame(() => guide.current?.scrollToNow());
@@ -51,28 +57,37 @@ export function App() {
         <p className="masthead__clock">
           <time dateTime={now.toISOString()}>{clockFormat.format(now)}</time>
         </p>
+        <button type="button" className="masthead__mode" aria-pressed={teletext} onClick={() => go(teletext ? null : INDEX)}>
+          Teletext
+        </button>
         <button type="button" className="masthead__now" onClick={jumpToNow}>
           On now
         </button>
       </header>
 
-      <main className="app__main">
+      <main className={teletext ? "app__main app__main--teletext" : "app__main"}>
         <h1 className="sr-only">TV guide</h1>
-        <div className="toolbar">
-          <DayPicker days={days} value={dayIndex} onChange={setDayIndex} />
-          <GenreFilter value={genres} onChange={setGenres} />
-        </div>
+        {teletext ? (
+          <Teletext page={page} go={go} now={now} />
+        ) : (
+          <>
+            <div className="toolbar">
+              <DayPicker days={days} value={dayIndex} onChange={setDayIndex} />
+              <GenreFilter value={genres} onChange={setGenres} />
+            </div>
 
-        <Guide
-          ref={guide}
-          key={key}
-          day={day}
-          channels={CHANNELS}
-          listings={listings}
-          nowMinutes={nowMinutes}
-          genres={genres}
-          onOpen={setOpen}
-        />
+            <Guide
+              ref={guide}
+              key={key}
+              day={day}
+              channels={CHANNELS}
+              listings={listings}
+              nowMinutes={nowMinutes}
+              genres={genres}
+              onOpen={setOpen}
+            />
+          </>
+        )}
       </main>
 
       <DetailsDialog programme={open} nowMinutes={nowMinutes} onClose={() => setOpen(null)} />
