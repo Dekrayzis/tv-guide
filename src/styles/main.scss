@@ -752,10 +752,10 @@ fieldset {
   border-radius: 1.25rem;
   background: linear-gradient(180deg, #121935, #0b1024);
   color: var(--text);
+  // A hint of the channel's colour at the edge; the shadow does the lifting.
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--channel) 25%, transparent),
-    0 40px 100px -30px rgb(0 0 0 / 0.9),
-    0 0 80px -30px var(--channel);
+    0 0 0 1px color-mix(in srgb, var(--channel) 18%, transparent),
+    0 40px 100px -30px rgb(0 0 0 / 0.9);
   scrollbar-width: thin;
 
   &[open] { animation: rise 0.35s var(--ease-out); }

@@ -57,7 +57,7 @@ export function DetailsDialog({ programme, dayKeys, nowMinutes, onOpen, onClose 
     // The same show anywhere else this week, from now on.
     const others = dayKeys
       .flatMap((key) => CHANNELS.flatMap((c) => scheduleFor(c, key)))
-      .filter((p) => p.title === programme.title && p.id !== programme.id && !after.includes(p))
+      .filter((p) => p.title === programme.title && p.id !== programme.id && !after.some((a) => a.id === p.id))
       .filter((p) => p.dayKey !== dayKeys[0] || p.end > nowMinutes)
       .slice(0, 4);
     return { comingUp: after, otherShowings: others };
