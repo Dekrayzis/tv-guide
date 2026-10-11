@@ -1,55 +1,9 @@
-import { memo, useId, type ReactNode } from "react";
-import type { Genre } from "../data/types";
-import { hash, seeded, type Rand } from "../lib/random";
+import type { ReactNode } from "react";
+import type { Genre } from "../../data/types";
+import { H, W, between, glow, ridge, sky, type Paint } from "./paint";
 
-/**
- * Artwork for a programme, drawn rather than photographed: a small scene
- * for its genre (a skyline for the news, mountains for a documentary, a
- * stadium for sport...), varied by the show's title so each show keeps
- * its own picture all week, and tinted with the channel's colour.
- */
-
-const W = 240;
-const H = 80;
-
-type Paint = { rand: Rand; tint: string; id: (name: string) => string };
-
-const between = (rand: Rand, lo: number, hi: number) => lo + rand() * (hi - lo);
-
-/** A jagged or rolling skyline across the full width, as a closed path. */
-function ridge(rand: Rand, base: number, height: number, steps: number, smooth: boolean) {
-  const points = Array.from({ length: steps + 1 }, (_, i) => [(i / steps) * W, base - rand() * height] as const);
-  const line = smooth
-    ? points.map(([x, y], i) => (i ? `S${x - W / steps / 2} ${y} ${x} ${y}` : `M${x} ${y}`)).join(" ")
-    : points.map(([x, y], i) => `${i ? "L" : "M"}${x} ${y}`).join(" ");
-  return `${line} L${W} ${H} L0 ${H}Z`;
-}
-
-const sky = (id: string, top: string, bottom: string) => (
-  <>
-    <defs>
-      <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor={top} />
-        <stop offset="1" stopColor={bottom} />
-      </linearGradient>
-    </defs>
-    <rect width={W} height={H} fill={`url(#${id})`} />
-  </>
-);
-
-const glow = (id: string, cx: number, cy: number, r: number, colour: string, opacity = 0.8) => (
-  <>
-    <defs>
-      <radialGradient id={id}>
-        <stop offset="0" stopColor={colour} stopOpacity={opacity} />
-        <stop offset="1" stopColor={colour} stopOpacity="0" />
-      </radialGradient>
-    </defs>
-    <circle cx={cx} cy={cy} r={r} fill={`url(#${id})`} />
-  </>
-);
-
-const SCENES: Record<Genre, (p: Paint) => ReactNode> = {
+/** One scene per genre. Each draws on the same canvas, varied by the show's seeded randomness and tinted with its channel. */
+export const SCENES: Record<Genre, (p: Paint) => ReactNode> = {
   // A city at night, windows lit.
   news: ({ rand, tint, id }) => {
     const buildings: ReactNode[] = [];
@@ -265,21 +219,3 @@ const SCENES: Record<Genre, (p: Paint) => ReactNode> = {
     );
   },
 };
-
-type Props = {
-  title: string;
-  genre: Genre;
-  tint: string;
-  /** Which part of the scene to keep when it's cropped: the right (in the grid) or the middle. */
-  focus?: "right" | "middle";
-};
-
-export const ProgrammeArt = memo(function ProgrammeArt({ title, genre, tint, focus = "right" }: Props) {
-  const uid = useId();
-  const id = (name: string) => `${uid}${name}`;
-  return (
-    <svg className="art" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={focus === "right" ? "xMaxYMid slice" : "xMidYMid slice"} aria-hidden="true">
-      {SCENES[genre]({ rand: seeded(hash(title)), tint, id })}
-    </svg>
-  );
-});

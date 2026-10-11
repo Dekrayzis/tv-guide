@@ -1,21 +1,20 @@
 import { useMemo, useRef, useState, type FormEvent } from "react";
-import { CHANNELS } from "./data/channels";
-import { scheduleFor } from "./data/schedule";
+import { CHANNELS, channelById } from "./data/channels";
+import { listingsFor } from "./data/schedule";
 import type { Genre, Programme } from "./data/types";
 import { addDays, broadcastDay, dayKey, minutesInto } from "./lib/time";
+import { clockTime } from "./lib/format";
 import { useNow } from "./lib/useNow";
 import { useFavourites } from "./lib/useFavourites";
 import { useHashPage } from "./lib/useHashPage";
 import { DayPicker } from "./components/DayPicker";
 import { GenreFilter } from "./components/GenreFilter";
-import { Guide, type GuideHandle } from "./components/Guide";
-import { DetailsDialog } from "./components/DetailsDialog";
+import { Guide, type GuideHandle } from "./components/guide/Guide";
+import { DetailsDialog } from "./components/details/DetailsDialog";
 import { Teletext } from "./teletext/Teletext";
 import { INDEX } from "./teletext/pages";
 
 const WEEK = 7;
-
-const clockFormat = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 /**
  * Signal: a week of listings for eight made-up channels. The guide is
@@ -40,7 +39,7 @@ export function App() {
   const dayKeys = useMemo(() => days.map(dayKey), [days]);
   const day = days[dayIndex];
   const key = dayKey(day);
-  const listings = useMemo(() => new Map(CHANNELS.map((c) => [c.id, scheduleFor(c, key)])), [key]);
+  const listings = listingsFor(key);
   // Where "now" falls in the day on show, or null when it's another day.
   const nowMinutes = dayIndex === 0 ? minutesInto(day, now) : null;
 
@@ -56,8 +55,7 @@ export function App() {
   const matches = (p: Programme) => {
     if (genres.size && !genres.has(p.genre)) return false;
     if (!needle) return true;
-    const channel = CHANNELS.find((c) => c.id === p.channelId)!;
-    return [p.title, p.episode ?? "", channel.name].some((text) => text.toLowerCase().includes(needle));
+    return [p.title, p.episode ?? "", channelById(p.channelId).name].some((text) => text.toLowerCase().includes(needle));
   };
   const matchCount = useMemo(
     () => (needle || genres.size ? [...listings.values()].flat().filter(matches).length : null),
@@ -144,7 +142,7 @@ export function App() {
               channels={channels}
               listings={listings}
               nowMinutes={nowMinutes}
-              clockText={clockFormat.format(now)}
+              clockText={clockTime.format(now)}
               onNow={jumpToNow}
               matches={matches}
               favourites={favourites}

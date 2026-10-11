@@ -1,16 +1,34 @@
 import { hash, pick, seeded, type Rand } from "../lib/random";
-import { DAY_MINUTES, minutesFromStart } from "../lib/time";
+import { DAY_MINUTES, inPrimeTime, minutesFromStart } from "../lib/time";
+import { CHANNELS } from "./channels";
 import type { Channel, Programme, Show } from "./types";
 
-/** Prime time, in minutes from the 06:00 start: 19:00 to 22:30. */
-const PRIME = [minutesFromStart("19:00"), minutesFromStart("22:30")] as const;
+export type Listings = ReadonlyMap<string, readonly Programme[]>;
+
+const days = new Map<string, Listings>();
+
+/**
+ * Every channel's listings for a day, by channel id. A day's listings never
+ * change, so each day is generated once and kept.
+ */
+export function listingsFor(dayKey: string): Listings {
+  let listings = days.get(dayKey);
+  if (!listings) {
+    listings = new Map(CHANNELS.map((c) => [c.id, scheduleFor(c, dayKey)]));
+    days.set(dayKey, listings);
+  }
+  return listings;
+}
+
+/** One channel's listings for a day. */
+export const channelListings = (dayKey: string, channelId: string) => listingsFor(dayKey).get(channelId) ?? [];
 
 /**
  * A channel's full broadcast day, 06:00 to 06:00, for a date. It's seeded
  * from the channel and the date, so the same day always gets the same
  * listings, for every visitor.
  */
-export function scheduleFor(channel: Channel, dayKey: string): Programme[] {
+function scheduleFor(channel: Channel, dayKey: string): Programme[] {
   const rand = seeded(hash(`${channel.id}:${dayKey}`));
   const listings: Programme[] = [];
   const parts = channel.dayparts;
@@ -41,7 +59,6 @@ export function scheduleFor(channel: Channel, dayKey: string): Programme[] {
 }
 
 function listing(channel: Channel, dayKey: string, s: Show, start: number, end: number, rand: Rand): Programme {
-  const inPrime = start >= PRIME[0] && start < PRIME[1];
   const episodeIndex = s.episodes ? Math.floor(rand() * s.episodes.length) : -1;
   // A show keeps the same series number all week; the episode is its place in the list.
   const seriesNumber = 1 + (hash(s.title) % 7);
@@ -57,7 +74,8 @@ function listing(channel: Channel, dayKey: string, s: Show, start: number, end: 
     series: s.episodes ? `Series ${seriesNumber}, episode ${episodeIndex + 1}` : undefined,
     seriesTag: s.episodes ? `S${seriesNumber} E${episodeIndex + 1}` : undefined,
     blurb: pick(rand, s.blurbs),
-    isNew: s.alwaysNew || (s.genre !== "film" && rand() < (inPrime ? 0.6 : 0.15)),
+    isNew: s.alwaysNew || (s.genre !== "film" && rand() < (inPrimeTime(start) ? 0.6 : 0.15)),
+    isLive: Boolean(s.live),
     subtitles: rand() < 0.9,
     audioDescribed: ["drama", "film", "documentary"].includes(s.genre) && rand() < 0.45,
   };

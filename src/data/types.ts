@@ -14,6 +14,8 @@ export type Show = {
   episodes?: readonly string[];
   /** Repeat showings are marked; some shows are always new (news, live sport). */
   alwaysNew?: boolean;
+  /** Shown live, as it happens. */
+  live?: boolean;
 };
 
 /** Part of a channel's day, and the shows it draws from. */
@@ -27,11 +29,7 @@ export type Channel = {
   id: string;
   number: number;
   name: string;
-  /** A short mark for the logo tile, two or three characters. */
-  mark: string;
   colour: string;
-  /** What the channel is about, for the details dialog. */
-  tagline: string;
   /** A word or two under the name in the guide, e.g. "Nature". */
   category: string;
   dayparts: readonly Daypart[];
@@ -54,6 +52,8 @@ export type Programme = {
   seriesTag?: string;
   blurb: string;
   isNew: boolean;
+  /** A live broadcast (sport, mostly), as opposed to a recording. */
+  isLive: boolean;
   subtitles: boolean;
   audioDescribed: boolean;
 };

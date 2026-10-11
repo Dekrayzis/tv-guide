@@ -1,6 +1,4 @@
-const weekday = new Intl.DateTimeFormat("en-GB", { weekday: "short" });
-const shortDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
-const full = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long" });
+import { longDate, shortDate, weekday } from "../lib/format";
 
 type Props = {
   days: readonly Date[];
@@ -20,7 +18,7 @@ export function DayPicker({ days, value, onChange }: Props) {
           <span className="days__date" aria-hidden="true">
             {shortDate.format(day)}
           </span>
-          <span className="sr-only">, {full.format(day)}</span>
+          <span className="sr-only">, {longDate.format(day)}</span>
         </label>
       ))}
     </fieldset>

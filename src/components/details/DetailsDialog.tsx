@@ -1,19 +1,14 @@
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
-import { CHANNELS } from "../data/channels";
-import { GENRES } from "../data/genres";
-import { scheduleFor } from "../data/schedule";
-import type { Programme } from "../data/types";
-import { clock, duration } from "../lib/time";
-import { ChannelLogo } from "./ChannelLogo";
-import { ProgrammeArt } from "./ProgrammeArt";
-
-const shortDay = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
-
-/** "2026-10-13" as a date. */
-const fromKey = (key: string) => {
-  const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d);
-};
+import { useEffect, useRef, type CSSProperties } from "react";
+import { channelById } from "../../data/channels";
+import { GENRES } from "../../data/genres";
+import type { Programme } from "../../data/types";
+import { clock, duration, isOnAt } from "../../lib/time";
+import { ProgrammeArt } from "../art/ProgrammeArt";
+import { Badge, onNowBadge } from "../Badge";
+import { ChannelLogo } from "../ChannelLogo";
+import { dayLabel } from "./dayLabel";
+import { ProgrammeRow } from "./ProgrammeRow";
+import { useRelatedProgrammes } from "./useRelatedProgrammes";
 
 type Props = {
   programme: Programme | null;
@@ -25,6 +20,21 @@ type Props = {
   onClose: () => void;
 };
 
+/** Where a programme stands against the clock, if it's on today: on now (and how long is left), still to come, or over. */
+function timing(programme: Programme, minutes: number | null) {
+  if (minutes === null) return { live: false, status: null, progress: 0 };
+  if (isOnAt(programme, minutes)) {
+    const length = programme.end - programme.start;
+    return {
+      live: true,
+      status: `${duration(Math.max(1, Math.round(programme.end - minutes)))} left`,
+      progress: (minutes - programme.start) / length,
+    };
+  }
+  if (programme.end <= minutes) return { live: false, status: "Finished", progress: 0 };
+  return { live: false, status: `Starts in ${duration(Math.max(1, Math.round(programme.start - minutes)))}`, progress: 0 };
+}
+
 /**
  * A programme's details, in a modal dialog: its artwork, when it's on (and
  * how far through, if it's on now), what's after it on the channel, and
@@ -34,6 +44,7 @@ type Props = {
 export function DetailsDialog({ programme, dayKeys, nowMinutes, onOpen, onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
+  const related = useRelatedProgrammes(programme, dayKeys, nowMinutes);
 
   useEffect(() => {
     const el = dialog.current;
@@ -44,61 +55,12 @@ export function DetailsDialog({ programme, dayKeys, nowMinutes, onOpen, onClose 
     else if (programme && el.open) title.current?.focus();
   }, [programme]);
 
-  const channel = programme && CHANNELS.find((c) => c.id === programme.channelId);
-
-  const dayName = (key: string) => (key === dayKeys[0] ? "Today" : key === dayKeys[1] ? "Tomorrow" : shortDay.format(fromKey(key)));
-  // Where a programme stands against the clock: minutes into it, or null when it isn't today.
-  const onToday = (p: Programme) => (p.dayKey === dayKeys[0] ? nowMinutes : null);
-
-  const { comingUp, otherShowings } = useMemo(() => {
-    if (!programme) return { comingUp: [], otherShowings: [] };
-    const day = scheduleFor(CHANNELS.find((c) => c.id === programme.channelId)!, programme.dayKey);
-    const after = day.filter((p) => p.start >= programme.end).slice(0, 3);
-    // The same show anywhere else this week, from now on.
-    const others = dayKeys
-      .flatMap((key) => CHANNELS.flatMap((c) => scheduleFor(c, key)))
-      .filter((p) => p.title === programme.title && p.id !== programme.id && !after.some((a) => a.id === p.id))
-      .filter((p) => p.dayKey !== dayKeys[0] || p.end > nowMinutes)
-      .slice(0, 4);
-    return { comingUp: after, otherShowings: others };
-  }, [programme, dayKeys]);
-
-  if (!programme || !channel) {
+  if (!programme) {
     return <dialog ref={dialog} className="details" onClose={onClose} />;
   }
 
-  const minutes = onToday(programme);
-  const length = programme.end - programme.start;
-  const live = minutes !== null && programme.start <= minutes && minutes < programme.end;
-  const finished = minutes !== null && programme.end <= minutes;
-  const progress = live ? (minutes - programme.start) / length : 0;
-  const liveEvent = programme.title.startsWith("Live:");
-
-  let status: string | null = null;
-  if (live) status = `${duration(Math.max(1, Math.round(programme.end - minutes)))} left`;
-  else if (finished) status = "Finished";
-  else if (minutes !== null) status = `Starts in ${duration(Math.max(1, Math.round(programme.start - minutes)))}`;
-
-  const row = (p: Programme, showChannel: boolean) => {
-    const c = CHANNELS.find((ch) => ch.id === p.channelId)!;
-    return (
-      <li key={p.id}>
-        <button type="button" className="details__item" onClick={() => onOpen(p)} style={{ "--channel": c.colour } as CSSProperties}>
-          <span className="details__item-art">
-            <ProgrammeArt title={p.title} genre={p.genre} tint={c.colour} focus="middle" />
-          </span>
-          <span className="details__item-text">
-            <span className="details__item-title">{p.title}</span>
-            <span className="details__item-when">
-              {showChannel && `${dayName(p.dayKey)} · `}
-              {clock(p.start)}
-              {showChannel && ` · ${c.name}`}
-            </span>
-          </span>
-        </button>
-      </li>
-    );
-  };
+  const channel = channelById(programme.channelId);
+  const { live, status, progress } = timing(programme, programme.dayKey === dayKeys[0] ? nowMinutes : null);
 
   return (
     <dialog
@@ -128,8 +90,8 @@ export function DetailsDialog({ programme, dayKeys, nowMinutes, onOpen, onClose 
           <div className="details__heading">
             {(live || programme.isNew) && (
               <p className="details__badges">
-                {live && <span className={liveEvent ? "badge badge--live" : "badge badge--now"}>{liveEvent ? "Live" : "On now"}</span>}
-                {programme.isNew && <span className="badge">New</span>}
+                {live && <Badge kind={onNowBadge(programme)} />}
+                {programme.isNew && <Badge kind="new" />}
               </p>
             )}
             <h2 id="details-title" ref={title} tabIndex={-1} className="details__title">
@@ -147,11 +109,11 @@ export function DetailsDialog({ programme, dayKeys, nowMinutes, onOpen, onClose 
         <div className="details__body">
           <div className="details__when">
             <p className="details__time">
-              <span>{dayName(programme.dayKey)}</span>
+              <span>{dayLabel(programme.dayKey, dayKeys)}</span>
               <span>
                 {clock(programme.start)} – {clock(programme.end)}
               </span>
-              <span className="details__length">{duration(length)}</span>
+              <span className="details__length">{duration(programme.end - programme.start)}</span>
             </p>
             {status && <p className={live ? "details__status is-live" : "details__status"}>{status}</p>}
             {live && (
@@ -178,21 +140,29 @@ export function DetailsDialog({ programme, dayKeys, nowMinutes, onOpen, onClose 
             )}
           </ul>
 
-          {comingUp.length > 0 && (
+          {related.next.length > 0 && (
             <section className="details__section" aria-labelledby="details-next">
               <h3 id="details-next" className="details__subhead">
                 Next on {channel.name}
               </h3>
-              <ol className="details__list">{comingUp.map((p) => row(p, false))}</ol>
+              <ol className="details__list">
+                {related.next.map((p) => (
+                  <ProgrammeRow key={p.id} programme={p} onOpen={onOpen} />
+                ))}
+              </ol>
             </section>
           )}
 
-          {otherShowings.length > 0 && (
+          {related.others.length > 0 && (
             <section className="details__section" aria-labelledby="details-other">
               <h3 id="details-other" className="details__subhead">
                 Also showing this week
               </h3>
-              <ul className="details__list">{otherShowings.map((p) => row(p, true))}</ul>
+              <ul className="details__list">
+                {related.others.map((p) => (
+                  <ProgrammeRow key={p.id} programme={p} day={dayLabel(p.dayKey, dayKeys)} onOpen={onOpen} />
+                ))}
+              </ul>
             </section>
           )}
         </div>

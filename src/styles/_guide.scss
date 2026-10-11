@@ -1,0 +1,196 @@
+@use "tokens" as *;
+
+// ---- The guide ----------------------------------------------------------------------
+// One scroll box, both ways. The time ruler sticks to its top and the channel
+// column to its left; programmes are placed along each row by start time.
+
+.guide {
+  --ppm: 4px; // Pixels a minute: an hour is 240px.
+  --channel-w: 17rem;
+  --ruler-h: 3.5rem;
+  --row-h: 4.6rem;
+  --day-w: calc(var(--ppm) * 1440);
+
+  position: relative;
+  align-self: start; // As tall as its rows, up to the space there is.
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  @include scrollbar;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgb(8 12 30 / 0.7);
+  box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.9);
+  // Keyboard focus scrolls programmes clear of the sticky ruler and column.
+  scroll-padding: var(--ruler-h) 0 0 var(--channel-w);
+
+  @include phone {
+    --ppm: 3px;
+    --channel-w: 4.5rem;
+    --row-h: 4.5rem;
+    --ruler-h: 3rem;
+  }
+
+  &__ruler {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    width: calc(var(--channel-w) + var(--day-w));
+    height: var(--ruler-h);
+    background: rgb(var(--chrome-rgb) / 0.96);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  // The corner: the time now, and a button back to it.
+  &__corner {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex: none;
+    width: var(--channel-w);
+    padding: 0 0.9rem;
+    background: rgb(var(--chrome-rgb));
+    border-right: 1px solid var(--line);
+
+    @include phone { justify-content: center; padding: 0; }
+  }
+
+  &__clock {
+    display: grid;
+    margin: 0;
+    line-height: 1.1;
+
+    @include phone { display: none; }
+  }
+
+  &__clock-label { font-size: 0.72rem; color: var(--muted); }
+
+  &__clock-time {
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__on-now {
+    padding: 0.35rem 0.8rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 0 18px -4px var(--accent);
+    transition: filter 0.2s;
+
+    &:hover { filter: brightness(1.1); }
+    &:focus-visible { @include focus-ring; }
+
+    @include phone { padding: 0.3rem 0.5rem; font-size: 0.7rem; }
+  }
+
+  // Half-hour labels over a fine tick every five minutes.
+  &__marks {
+    position: relative;
+    flex: none;
+    width: var(--day-w);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: repeating-linear-gradient(to right, rgb(255 255 255 / 0.18) 0 1px, transparent 1px calc(var(--ppm) * 5)) bottom left / 100% 0.4rem no-repeat;
+  }
+
+  &__mark {
+    position: absolute;
+    bottom: 0.7rem;
+    left: calc(var(--ppm) * var(--at));
+    padding-left: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+
+    // A taller tick on the hour and half hour.
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.15rem;
+      bottom: -0.7rem;
+      width: 1px;
+      background: var(--line-strong);
+    }
+
+    &--half {
+      font-weight: 400;
+      color: var(--muted);
+    }
+  }
+
+  &__now-flag {
+    position: absolute;
+    top: 0.45rem;
+    left: calc(var(--channel-w) + var(--ppm) * var(--at));
+    z-index: 0;
+    margin: 0;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    translate: -50% 0;
+    box-shadow: 0 0 16px var(--accent);
+
+    // A dot where the line meets the ruler.
+    &::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: calc(var(--ruler-h) - 0.45rem - 0.3rem);
+      width: 0.55rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--accent);
+      translate: -50% 0;
+    }
+  }
+
+  &__body {
+    position: relative;
+    width: calc(var(--channel-w) + var(--day-w));
+    padding-block: 0.3rem;
+  }
+
+  &__row {
+    display: flex;
+    height: var(--row-h);
+  }
+
+  &__track {
+    position: relative;
+    flex: none;
+    width: var(--day-w);
+  }
+
+  // The line at the current time, under the channel column when it scrolls past.
+  &__now {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--channel-w) + var(--ppm) * var(--at));
+    z-index: 1;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    pointer-events: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { GENRES, GENRE_IDS } from "../data/genres";
 import type { Genre } from "../data/types";
+import { toggled } from "../lib/sets";
 
 type Props = {
   value: ReadonlySet<Genre>;
@@ -8,12 +9,6 @@ type Props = {
 
 /** Genres to highlight; any number at once. "All" clears them, so everything shows at full strength. */
 export function GenreFilter({ value, onChange }: Props) {
-  const toggle = (genre: Genre) => {
-    const next = new Set(value);
-    if (!next.delete(genre)) next.add(genre);
-    onChange(next);
-  };
-
   return (
     <fieldset className="genres">
       <legend className="sr-only">Highlight genres</legend>
@@ -22,7 +17,7 @@ export function GenreFilter({ value, onChange }: Props) {
       </button>
       {GENRE_IDS.map((genre) => (
         <label key={genre} className="genres__chip">
-          <input type="checkbox" className="genres__input" checked={value.has(genre)} onChange={() => toggle(genre)} />
+          <input type="checkbox" className="genres__input" checked={value.has(genre)} onChange={() => onChange(toggled(value, genre))} />
           {GENRES[genre]}
         </label>
       ))}

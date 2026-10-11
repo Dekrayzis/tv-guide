@@ -1,0 +1,47 @@
+@use "tokens" as *;
+
+// ---- Base -----------------------------------------------------------------------
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,
+body { margin: 0; }
+
+body {
+  // A dark night sky, with the faintest glow of the accent behind the masthead.
+  background:
+    radial-gradient(60rem 30rem at 0% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    radial-gradient(70rem 40rem at 100% 0%, rgb(70 60 200 / 0.18), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font: 400 1rem/1.4 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input { font: inherit; color: inherit; }
+
+.sr-only { @include visually-hidden; }
+
+// ---- Layout: the masthead on top, the guide filling the rest ---------------------
+
+.app {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+}
+
+.app__main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  min-height: 0;
+  padding: 0 1.25rem 1.25rem;
+
+  @include phone { padding: 0 0.5rem 0.5rem; }
+
+  &--teletext { grid-template-rows: minmax(0, 1fr); }
+}

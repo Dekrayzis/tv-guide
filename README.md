@@ -31,9 +31,11 @@ npm run dev
 
 | Path | What's there |
 | --- | --- |
-| `src/data/channels.ts` | The channels, their dayparts and their shows |
-| `src/data/schedule.ts` | The seeded generator that turns those into a day's listings |
-| `src/lib/` | Time helpers, the seeded random generator, and a ticking clock hook |
-| `src/components/` | The grid, the day picker, the genre filters and the details dialog |
-| `src/teletext/` | Teletext mode: the pages, the mosaic lettering and the set with its remote |
-| `src/styles/` | Sass: tokens and the app's styles |
+| `src/data/channels/` | One file per channel: its dayparts and shows. `shared.ts` has the helpers they're written with |
+| `src/data/schedule.ts` | The seeded generator, and `listingsFor(day)`, which builds each day once and keeps it |
+| `src/lib/` | Time, formatting, motion and set helpers, the seeded random generator, and the clock, favourites and URL-page hooks |
+| `src/components/guide/` | The grid: ruler, channel headers, programme cells, and the keyboard navigation hook |
+| `src/components/details/` | The programme details dialog and what it suggests next |
+| `src/components/art/` | The drawn artwork: painting helpers and one scene per genre |
+| `src/teletext/` | Teletext mode: the set, the remote, the page-search, subpage and keyboard hooks, and `pages/` with one file per page |
+| `src/styles/` | Sass: tokens, then one partial per part of the page |

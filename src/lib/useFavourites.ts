@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toggled } from "./sets";
 
 const KEY = "signal:favourites";
 
@@ -16,8 +17,7 @@ export function useFavourites() {
   const [ids, setIds] = useState<ReadonlySet<string>>(() => new Set(load()));
 
   const toggle = (id: string) => {
-    const next = new Set(ids);
-    if (!next.delete(id)) next.add(id);
+    const next = toggled(ids, id);
     setIds(next);
     try {
       localStorage.setItem(KEY, JSON.stringify([...next]));

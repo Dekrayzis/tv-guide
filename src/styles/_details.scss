@@ -1,0 +1,288 @@
+@use "tokens" as *;
+
+// ---- Details dialog ------------------------------------------------------------------
+
+.details {
+  width: min(36rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+  color: var(--text);
+  // A hint of the channel's colour at the edge; the shadow does the lifting.
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--channel) 18%, transparent),
+    0 40px 100px -30px rgb(0 0 0 / 0.9);
+  @include scrollbar;
+
+  &[open] { animation: rise 0.35s var(--ease-out); }
+
+  &::backdrop {
+    background: rgb(3 5 14 / 0.72);
+    backdrop-filter: blur(6px);
+  }
+
+  @include less-motion {
+    &[open] { animation: none; }
+  }
+
+  // The artwork, big, with the title over its foot.
+  &__hero {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-content: space-between;
+    min-height: 15rem;
+    padding: 1rem 1rem 1.25rem 1.5rem;
+    overflow: hidden;
+
+    > .art {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+    }
+
+    // Darken towards the foot, where the title sits.
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(180deg, rgb(var(--scrim-rgb) / 0.15), rgb(var(--scrim-rgb) / 0.1) 35%, var(--panel-foot));
+    }
+  }
+
+  &__channel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-self: start;
+    margin: 0;
+    padding: 0.35rem 0.75rem 0.35rem 0.45rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 999px;
+    background: rgb(var(--scrim-rgb) / 0.55);
+    backdrop-filter: blur(8px);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__logo { width: 1.4rem; color: var(--channel); }
+
+  &__number { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+
+  &__close-form {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    margin: 0;
+  }
+
+  &__close {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 0.15);
+    border-radius: 50%;
+    background: rgb(var(--scrim-rgb) / 0.55);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    svg {
+      width: 1.1rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+    }
+
+    &:hover { background: rgb(255 255 255 / 0.15); }
+    &:focus-visible { @include focus-ring; }
+  }
+
+  &__heading {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 4rem;
+    text-shadow: 0 2px 12px rgb(0 0 0 / 0.8);
+  }
+
+  &__badges {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: clamp(1.6rem, 5vw, 2.1rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+
+    &:focus { outline: none; }
+  }
+
+  &__episode {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    color: var(--text-3);
+  }
+
+  &__tag {
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.3rem;
+    background: color-mix(in srgb, var(--channel) 30%, transparent);
+    color: color-mix(in srgb, var(--channel) 60%, #fff);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-shadow: none;
+  }
+
+  &__body {
+    display: grid;
+    gap: 1.25rem;
+    padding: 0.25rem 1.5rem 1.5rem;
+  }
+
+  &__when {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.6rem 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 0.9rem;
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  &__time {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__length { font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+
+  &__status {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+
+    &.is-live { color: var(--accent); font-weight: 600; }
+  }
+
+  &__progress {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 5px;
+    border: 0;
+    border-radius: 3px;
+    background: var(--surface-3);
+    appearance: none;
+
+    &::-webkit-progress-bar { background: var(--surface-3); border-radius: 3px; }
+    &::-webkit-progress-value { background: var(--accent); border-radius: 3px; box-shadow: 0 0 10px var(--accent); }
+    &::-moz-progress-bar { background: var(--accent); border-radius: 3px; }
+  }
+
+  &__blurb {
+    margin: 0;
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__section { display: grid; gap: 0.6rem; }
+
+  &__subhead {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  &__list {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  // Another programme, as a row with a thumbnail of its art.
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    background: rgb(255 255 255 / 0.03);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+
+    &:hover { background: rgb(255 255 255 / 0.07); border-color: var(--line-strong); }
+    &:focus-visible { @include focus-ring; }
+  }
+
+  &__item-art {
+    position: relative;
+    flex: none;
+    width: 5rem;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    box-shadow: inset 3px 0 0 var(--channel);
+
+    .art { position: absolute; inset: 0; width: 100%; height: 100%; }
+  }
+
+  &__item-text { display: grid; min-width: 0; }
+
+  &__item-title {
+    overflow: hidden;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__item-when {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Small labels: badges on the art, chips under the blurb.
+
+@keyframes rise {
+  from { opacity: 0; translate: 0 1rem; }
+}

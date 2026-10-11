@@ -1,0 +1,101 @@
+@use "tokens" as *;
+
+// ---- A channel's row header -------------------------------------------------------
+
+.channel {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: none;
+  width: var(--channel-w);
+  padding: 0.3rem 0.6rem 0.3rem 0.9rem;
+  background: linear-gradient(90deg, rgb(var(--chrome-rgb)), var(--chrome-2));
+  border-right: 1px solid var(--line);
+
+  @include phone { justify-content: center; padding: 0; }
+
+  &__number {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.4rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: var(--channel);
+    color: var(--on-channel);
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 0 16px -4px var(--channel);
+
+    @include phone { display: none; }
+  }
+
+  &__logo {
+    flex: none;
+    width: 2.2rem;
+    color: var(--channel);
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--channel) 50%, transparent));
+  }
+
+  &__text {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+
+    @include phone { @include visually-hidden; }
+  }
+
+  &__name {
+    overflow: hidden;
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__category {
+    overflow: hidden;
+    font-size: 0.78rem;
+    color: var(--muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__star {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2rem;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+
+    svg {
+      width: 1.2rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linejoin: round;
+    }
+
+    &:hover { color: var(--text); background: rgb(255 255 255 / 0.06); }
+    &:focus-visible { @include focus-ring(0); }
+
+    &[aria-pressed="true"] {
+      color: var(--star);
+
+      svg { fill: currentColor; }
+    }
+
+    @include phone { display: none; }
+  }
+}

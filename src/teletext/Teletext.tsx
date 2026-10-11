@@ -1,26 +1,17 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { CHANNELS } from "../data/channels";
-import { scheduleFor } from "../data/schedule";
+import { useState } from "react";
+import { listingsFor } from "../data/schedule";
 import { addDays, broadcastDay, dayKey, minutesInto } from "../lib/time";
-import { useNow } from "../lib/useNow";
 import { Mosaic } from "./Mosaic";
-import { buildPage, pagesInService, type Colour } from "./pages";
+import { PAGES_IN_SERVICE, buildPage, type Colour } from "./pages";
+import { Remote } from "./Remote";
+import { TeletextHeader } from "./TeletextHeader";
+import { usePageFit } from "./usePageFit";
+import { usePageSearch } from "./usePageSearch";
+import { useRemoteKeys } from "./useRemoteKeys";
+import { useSubpages } from "./useSubpages";
 
-/** How long a subpage stays up before the next rotates in. */
-const ROTATE_MS = 12_000;
-/** How long the header counter rolls before a page "arrives". */
-const SEARCH_MS = 700;
+/** The Fastext row's colours on screen, in key order. */
 const FASTEXT: readonly Colour[] = ["red", "green", "yellow", "cyan"];
-/** The remote's Fastext keys: the fourth is blue on the remote, shown in cyan on screen. */
-const KEY_NAMES = ["Red", "Green", "Yellow", "Blue"];
-const KEYPAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
-
-const IN_SERVICE = pagesInService(CHANNELS.length);
-
-const lessMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const headerDate = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "2-digit", month: "short" });
-const two = (n: number) => String(n).padStart(2, "0");
 
 type Props = {
   page: number;
@@ -37,62 +28,23 @@ type Props = {
 export function Teletext({ page, go, now }: Props) {
   const today = broadcastDay(now);
   const todayKey = dayKey(today);
-  const tomorrowKey = dayKey(addDays(today, 1));
-  const todayListings = useMemo(() => new Map(CHANNELS.map((c) => [c.id, scheduleFor(c, todayKey)])), [todayKey]);
-  const tomorrowListings = useMemo(() => new Map(CHANNELS.map((c) => [c.id, scheduleFor(c, tomorrowKey)])), [tomorrowKey]);
-
-  // The page on screen lags the page asked for while the counter rolls.
-  const [shown, setShown] = useState(page);
-  const [counter, setCounter] = useState(page);
-  useEffect(() => {
-    if (page === shown) return;
-    if (lessMotion()) {
-      setShown(page);
-      setCounter(page);
-      return;
-    }
-    const roll = setInterval(() => setCounter(100 + Math.floor(Math.random() * 800)), 40);
-    const arrive = setTimeout(() => {
-      clearInterval(roll);
-      setCounter(page);
-      setShown(page);
-    }, SEARCH_MS);
-    return () => {
-      clearInterval(roll);
-      clearTimeout(arrive);
-    };
-  }, [page, shown]);
+  const { shown, counter } = usePageSearch(page);
 
   const data = buildPage(shown, {
-    channels: CHANNELS,
-    today: todayListings,
-    tomorrow: tomorrowListings,
+    today: listingsFor(todayKey),
+    tomorrow: listingsFor(dayKey(addDays(today, 1))),
     todayKey,
     nowMinutes: minutesInto(today, now),
   });
-  const count = data.subpages.length;
+  const subpages = useSubpages(shown, data.subpages.length, data.startAt);
+  const hasSubpages = subpages.count > 1;
 
-  // Subpage, Reveal and the half-typed page number all belong to the page on show.
-  const [sub, setSub] = useState({ page: shown, index: data.startAt ?? 0 });
-  const subIndex = sub.page === shown ? Math.min(sub.index, count - 1) : data.startAt ?? 0;
-  const turn = (step: number) => setSub({ page: shown, index: (subIndex + step + count) % count });
-  const [hold, setHold] = useState(false);
+  // Reveal belongs to the page it was pressed on.
   const [revealedOn, setRevealedOn] = useState<number | null>(null);
   const revealed = revealedOn === shown;
+
+  // A page number being typed, one digit at a time.
   const [entry, setEntry] = useState("");
-
-  useEffect(() => {
-    if (hold || count < 2) return;
-    const id = setTimeout(() => turn(1), ROTATE_MS);
-    return () => clearTimeout(id);
-  });
-
-  // Up and down: the next or previous page in service, wrapping round, as P+ and P- did.
-  const step = (dir: 1 | -1) => {
-    const later = IN_SERVICE.filter((n) => (dir > 0 ? n > page : n < page));
-    go(dir > 0 ? later[0] ?? IN_SERVICE[0] : later.at(-1) ?? IN_SERVICE.at(-1)!);
-  };
-
   const press = (digit: string) => {
     // Teletext pages run from 100 to 899.
     if (!entry && (digit === "0" || digit === "9")) return;
@@ -102,44 +54,23 @@ export function Teletext({ page, go, now }: Props) {
     go(Number(next));
   };
 
-  // Digits typed anywhere go to the page number, as on a remote.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented) return;
-      if ((event.target as HTMLElement).closest("input, textarea, select, [contenteditable]")) return;
-      if (/^\d$/.test(event.key)) press(event.key);
-      else if (event.key === "Escape" && entry) setEntry("");
-      else if (event.key === "ArrowUp" || event.key === "ArrowDown") step(event.key === "ArrowUp" ? 1 : -1);
-      else if ((event.key === "ArrowLeft" || event.key === "ArrowRight") && count > 1) turn(event.key === "ArrowRight" ? 1 : -1);
-      else return;
-      event.preventDefault();
-    };
-    addEventListener("keydown", onKey);
-    return () => removeEventListener("keydown", onKey);
-  });
+  // Up and down: the next or previous page in service, wrapping round, as P+ and P- did.
+  const step = (dir: 1 | -1) => {
+    const beyond = PAGES_IN_SERVICE.filter((n) => (dir > 0 ? n > page : n < page));
+    go(dir > 0 ? beyond[0] ?? PAGES_IN_SERVICE[0] : beyond.at(-1) ?? PAGES_IN_SERVICE.at(-1)!);
+  };
 
-  // The page is laid out 40 characters wide, then stretched to fill the screen.
-  const screen = useRef<HTMLDivElement>(null);
-  const sheet = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const fit = () => {
-      if (screen.current && sheet.current) {
-        sheet.current.style.setProperty("--sx", String(screen.current.clientWidth / sheet.current.offsetWidth));
-      }
-    };
-    // Watch the page too: it changes width when the pixel font arrives.
-    const observer = new ResizeObserver(fit);
-    observer.observe(screen.current!);
-    observer.observe(sheet.current!);
-    return () => observer.disconnect();
-  }, []);
+  const turn = (dir: 1 | -1) => hasSubpages && subpages.turn(dir);
+
+  useRemoteKeys({ digit: press, cancel: () => setEntry(""), page: step, subpage: turn });
+  const { screen, sheet } = usePageFit();
 
   return (
     <section className="tt" aria-label="Teletext">
       <div className="tt__set">
         <div ref={screen} className="tt__screen">
           <div ref={sheet} className={revealed ? "tt-page is-revealed" : "tt-page"}>
-            <Header target={entry ? entry.padEnd(3, "-") : String(page)} counter={counter} />
+            <TeletextHeader target={entry ? entry.padEnd(3, "-") : String(page)} counter={counter} />
 
             <div className="tt-banner">
               <Mosaic text="Signal" />
@@ -153,13 +84,13 @@ export function Teletext({ page, go, now }: Props) {
               {data.aside && <span className="tt-double tt-white">{data.aside}</span>}
             </h2>
 
-            <div className="tt-body">{data.subpages[subIndex]}</div>
+            <div className="tt-body">{data.subpages[subpages.index]}</div>
 
             <p className="tt-info">
               <span className="tt-cyan">{data.info}</span>
-              {count > 1 && (
+              {hasSubpages && (
                 <span>
-                  {hold && <span className="tt-hold">HOLD</span>} {subIndex + 1}/{count}
+                  {subpages.hold && <span className="tt-hold">HOLD</span>} {subpages.index + 1}/{subpages.count}
                 </span>
               )}
             </p>
@@ -179,72 +110,21 @@ export function Teletext({ page, go, now }: Props) {
         </div>
       </div>
 
-      <div className="remote" role="group" aria-label="Remote control">
-        <ul className="remote__fastext">
-          {data.fastext.map((f, i) => (
-            <li key={i}>
-              <a
-                href={`#${f.page}`}
-                className={`remote__colour remote__colour--${KEY_NAMES[i].toLowerCase()}`}
-                aria-label={`${KEY_NAMES[i]}: ${f.label}`}
-                title={f.label}
-              />
-            </li>
-          ))}
-        </ul>
-        <div className="remote__keypad">
-          {KEYPAD.map((digit) => (
-            <button key={digit} type="button" className="remote__key" onClick={() => press(digit)}>
-              {digit}
-            </button>
-          ))}
-        </div>
-        <div className="remote__dpad">
-          <button type="button" className="remote__key remote__key--up" aria-label="Next page" onClick={() => step(1)}>
-            ▴
-          </button>
-          <button type="button" className="remote__key remote__key--left" aria-label="Previous subpage" disabled={count < 2} onClick={() => turn(-1)}>
-            ◂
-          </button>
-          <button type="button" className="remote__key remote__key--hold" aria-pressed={hold} disabled={count < 2} onClick={() => setHold(!hold)}>
-            Hold
-          </button>
-          <button type="button" className="remote__key remote__key--right" aria-label="Next subpage" disabled={count < 2} onClick={() => turn(1)}>
-            ▸
-          </button>
-          <button type="button" className="remote__key remote__key--down" aria-label="Previous page" onClick={() => step(-1)}>
-            ▾
-          </button>
-        </div>
-        <button
-          type="button"
-          className="remote__key remote__key--wide"
-          aria-pressed={revealed}
-          onClick={() => setRevealedOn(revealed ? null : shown)}
-        >
-          Reveal
-        </button>
-      </div>
+      <Remote
+        fastext={data.fastext}
+        onDigit={press}
+        onPage={step}
+        onSubpage={turn}
+        hasSubpages={hasSubpages}
+        hold={subpages.hold}
+        onHold={() => subpages.setHold(!subpages.hold)}
+        revealed={revealed}
+        onReveal={() => setRevealedOn(revealed ? null : shown)}
+      />
 
       <p className="sr-only" aria-live="polite">
         Page {shown}, {data.title}
       </p>
     </section>
-  );
-}
-
-/** Row 0: the page asked for, the service, the rolling counter, the date and a clock with seconds. */
-function Header({ target, counter }: { target: string; counter: number }) {
-  const now = useNow(1000);
-  return (
-    <p className="tt-header">
-      <span>P{target}</span>
-      <span>SIGNAL</span>
-      <span aria-hidden="true">{counter}</span>
-      <span>{headerDate.format(now).replace(",", "")}</span>
-      <time className="tt-yellow" dateTime={now.toISOString()}>
-        {two(now.getHours())}:{two(now.getMinutes())}/{two(now.getSeconds())}
-      </time>
-    </p>
   );
 }

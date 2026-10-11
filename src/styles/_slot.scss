@@ -1,0 +1,174 @@
+@use "tokens" as *;
+
+// ---- A programme --------------------------------------------------------------------
+
+.slot {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: calc(var(--ppm) * var(--start) + 3px);
+  width: calc(var(--ppm) * var(--length) - 6px);
+
+  &__button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; // The label is only as wide as its text, so it has room to slide.
+    width: 100%;
+    height: 100%;
+    padding: 0.45rem 1.6rem 0.45rem 0.95rem;
+    // Clip rather than hide, so it isn't a scroll box and the label can stick.
+    overflow: clip;
+    border: 1px solid rgb(255 255 255 / 0.06);
+    border-radius: 0.6rem;
+    background: linear-gradient(180deg, var(--cell-top), var(--cell-bottom));
+    box-shadow: inset 3px 0 0 var(--channel);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s, opacity 0.2s, transform 0.2s var(--ease-out);
+
+    &:hover {
+      border-color: rgb(255 255 255 / 0.22);
+
+      .art { opacity: 1; transform: scale(1.04); }
+    }
+
+    &:focus-visible { @include focus-ring(1px); z-index: 1; }
+  }
+
+  // The artwork sits on the right and fades out towards the title.
+  .art {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: min(100%, 16rem);
+    height: 100%;
+    opacity: 0.85;
+    mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / 0.55) 35%, #000 75%);
+    transition: opacity 0.3s, transform 0.4s var(--ease-out);
+    transform-origin: right center;
+    pointer-events: none;
+  }
+
+  // The title and time stay in view at the channel column while a programme
+  // that started earlier scrolls under it, as on a set-top box guide.
+  &__label {
+    position: sticky;
+    left: calc(var(--channel-w) + 0.95rem);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+    max-width: 100%;
+    text-shadow: 0 1px 6px rgb(0 0 0 / 0.9);
+  }
+
+  // The title, with its badge after it.
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  &__title {
+    overflow: hidden;
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__time {
+    font-size: 0.76rem;
+    color: var(--text-4);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__tag {
+    overflow: hidden;
+    font-size: 0.68rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: color-mix(in srgb, var(--channel) 70%, #fff);
+  }
+
+  &__episode { font-weight: 400; color: var(--text-4); }
+
+  // The badge after the title, smaller than elsewhere.
+  .badge {
+    flex: none;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  &__chevron {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    z-index: 1;
+    width: 1rem;
+    translate: 0 -50%;
+    fill: none;
+    stroke: rgb(255 255 255 / 0.7);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  // On now: outlined and glowing in the accent, with a bar showing how far in it is.
+  &.is-live &__button {
+    border-color: var(--accent);
+    box-shadow:
+      inset 3px 0 0 var(--channel),
+      0 0 0 1px var(--accent),
+      0 0 22px -4px var(--accent);
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      z-index: 1;
+      width: 100%;
+      height: 3px;
+      background: var(--accent);
+      transform: scaleX(var(--progress));
+      transform-origin: left;
+    }
+  }
+
+  &.is-past &__button {
+    background: var(--cell-past);
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--channel) 40%, transparent);
+
+    .art { opacity: 0.35; filter: grayscale(0.7); }
+  }
+
+  &.is-past &__title { color: var(--muted); }
+
+  &.is-dimmed &__button { opacity: 0.18; }
+
+  &.is-compact &__button { padding-right: 0.5rem; }
+  &.is-compact &__chevron,
+  &.is-compact &__tag { display: none; }
+  // No room for a badge beside the title: the outline says it's on, and
+  // screen readers still hear it.
+  &.is-compact .badge { @include visually-hidden; }
+
+  @include phone {
+    .badge { @include visually-hidden; }
+  }
+
+  &.is-narrow &__button { padding-inline: 0.55rem 0.25rem; }
+  &.is-narrow &__time { display: none; }
+}
+
+@include less-motion {
+  .slot__button:hover .art { transform: none; }
+}

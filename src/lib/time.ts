@@ -50,3 +50,17 @@ export function addDays(day: Date, n: number) {
   next.setDate(next.getDate() + n);
   return next;
 }
+
+/** Prime time, in minutes from the 06:00 start: 19:00 to 22:30. */
+export const PRIME_TIME = { start: minutesFromStart("19:00"), end: minutesFromStart("22:30") } as const;
+
+export const inPrimeTime = (minute: number) => minute >= PRIME_TIME.start && minute < PRIME_TIME.end;
+
+/** Whether something with a start and end (in minutes) is on at `minute`. */
+export const isOnAt = (span: { start: number; end: number }, minute: number) => span.start <= minute && minute < span.end;
+
+/** A day key, "2026-10-13", as a date. */
+export function dateFromKey(key: string) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}

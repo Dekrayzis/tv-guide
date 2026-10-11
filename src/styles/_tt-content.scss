@@ -1,0 +1,97 @@
+@use "tokens" as *;
+
+// ---- What the pages hold: listings, now and next, the index, the quiz ------------
+
+.tt-listing {
+  li {
+    display: flex;
+    gap: 1ch;
+    white-space: nowrap;
+  }
+
+  &__time { flex: none; }
+
+  &__title {
+    overflow: hidden;
+    color: var(--tt-cyan);
+    text-overflow: ellipsis;
+  }
+
+  .is-now &__time {
+    padding-inline: 0.5ch;
+    margin-inline: -0.5ch;
+    background: var(--tt-green);
+    color: #000;
+    text-shadow: none;
+  }
+
+  .is-now &__title { color: var(--tt-green); }
+}
+
+.tt-nownext {
+  li { margin-bottom: 1em; }
+
+  &__channel { text-transform: uppercase; }
+
+  &__line {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__label {
+    display: inline-block;
+    width: 5ch;
+    color: var(--tt-yellow);
+  }
+
+  &__time { color: var(--tt-cyan); }
+}
+
+.tt-index {
+  &__head,
+  &__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 5ch 4ch;
+    gap: 1ch;
+    white-space: nowrap;
+  }
+
+  &__head span:first-child { grid-column: 1 / 3; }
+
+  &__list--more {
+    margin-top: 1em;
+
+    .tt-index__row { grid-template-columns: auto minmax(0, 1fr) 4ch; }
+  }
+
+  &__row a { color: var(--tt-yellow); }
+
+  &__hint { margin-top: 1em; }
+}
+
+// Dot leaders, from the name to the page number.
+.tt-leader {
+  overflow: hidden;
+  color: var(--tt-blue);
+  filter: brightness(1.6);
+
+  &::before { content: "........................................"; }
+}
+
+.tt-quiz {
+  li { margin-bottom: 1em; }
+
+  &__q {
+    height: 2em;
+    overflow: hidden;
+  }
+
+  &__a { color: var(--tt-cyan); }
+}
+
+// Concealed text takes up its space but shows nothing (and isn't read out) until revealed.
+.tt-conceal { visibility: hidden; }
+.is-revealed .tt-conceal { visibility: visible; color: var(--tt-yellow); }
+
+.tt-missing p + p { margin-top: 1em; }

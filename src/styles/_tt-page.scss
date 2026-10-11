@@ -1,0 +1,111 @@
+@use "tokens" as *;
+
+// ---- The page: 40 × 25 characters, and its fixed rows ---------------------------
+
+.tt-page {
+  --sx: 2;
+
+  display: grid;
+  grid-template-rows: 1em 3em 2em 16em 1em 1em;
+  align-content: start;
+  width: 40ch;
+  height: 25em;
+  font: 400 calc(100cqh / 25) / 1 "VT323", ui-monospace, monospace;
+  color: var(--tt-white);
+  text-shadow: 0 0 0.25em color-mix(in srgb, currentColor 55%, transparent);
+  transform: scaleX(var(--sx));
+  transform-origin: 0 0;
+
+  // Zero specificity, so the row classes below can set their own spacing.
+  :where(p, h2, h3, ol, ul) {
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    list-style: none;
+  }
+
+  // :where() keeps this at zero specificity, so colour classes win.
+  :where(a) {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+    &:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; }
+  }
+}
+
+@each $name in "red", "green", "yellow", "blue", "magenta", "cyan", "white" {
+  .tt-#{$name} { color: var(--tt-#{$name}); }
+}
+
+// Double-height text: drawn at one row and stretched over two.
+.tt-double {
+  display: inline-block;
+  transform: scaleY(2);
+  transform-origin: 0 0;
+}
+
+.tt-header {
+  display: flex;
+  gap: 1ch;
+  padding-inline: 1ch;
+  white-space: pre;
+
+  time { margin-left: auto; }
+}
+
+.tt-banner {
+  display: flex;
+  align-items: center;
+  background: var(--tt-blue);
+
+  .tt-mosaic {
+    flex: none;
+    height: 3em;
+    margin-left: 1ch;
+    fill: var(--tt-yellow);
+    filter: drop-shadow(0 0 0.2em color-mix(in srgb, var(--tt-yellow) 50%, transparent));
+  }
+
+  &__side {
+    flex: 1;
+    align-self: start;
+    margin-top: 0.5em;
+    text-align: center;
+    color: var(--tt-cyan);
+  }
+}
+
+.tt-title {
+  display: flex;
+  justify-content: space-between;
+  padding-inline: 1ch;
+}
+
+.tt-body {
+  overflow: hidden;
+  padding-inline: 1ch;
+}
+
+// A channel's listings: one programme to a row.
+
+.tt-info {
+  display: flex;
+  justify-content: space-between;
+  padding-inline: 1ch;
+  white-space: nowrap;
+}
+
+.tt-hold {
+  background: var(--tt-red);
+  color: #000;
+  text-shadow: none;
+}
+
+.tt-fastext ul {
+  display: flex;
+  justify-content: space-between;
+  gap: 1ch;
+  padding-inline: 1ch;
+  white-space: nowrap;
+}
