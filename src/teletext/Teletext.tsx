@@ -4,7 +4,7 @@ import { scheduleFor } from "../data/schedule";
 import { addDays, broadcastDay, dayKey, minutesInto } from "../lib/time";
 import { useNow } from "../lib/useNow";
 import { Mosaic } from "./Mosaic";
-import { buildPage, type Colour } from "./pages";
+import { buildPage, pagesInService, type Colour } from "./pages";
 
 /** How long a subpage stays up before the next rotates in. */
 const ROTATE_MS = 12_000;
@@ -14,6 +14,8 @@ const FASTEXT: readonly Colour[] = ["red", "green", "yellow", "cyan"];
 /** The remote's Fastext keys: the fourth is blue on the remote, shown in cyan on screen. */
 const KEY_NAMES = ["Red", "Green", "Yellow", "Blue"];
 const KEYPAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+
+const IN_SERVICE = pagesInService(CHANNELS.length);
 
 const lessMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -85,6 +87,12 @@ export function Teletext({ page, go, now }: Props) {
     return () => clearTimeout(id);
   });
 
+  // Up and down: the next or previous page in service, wrapping round, as P+ and P- did.
+  const step = (dir: 1 | -1) => {
+    const later = IN_SERVICE.filter((n) => (dir > 0 ? n > page : n < page));
+    go(dir > 0 ? later[0] ?? IN_SERVICE[0] : later.at(-1) ?? IN_SERVICE.at(-1)!);
+  };
+
   const press = (digit: string) => {
     // Teletext pages run from 100 to 899.
     if (!entry && (digit === "0" || digit === "9")) return;
@@ -101,6 +109,10 @@ export function Teletext({ page, go, now }: Props) {
       if ((event.target as HTMLElement).closest("input, textarea, select, [contenteditable]")) return;
       if (/^\d$/.test(event.key)) press(event.key);
       else if (event.key === "Escape" && entry) setEntry("");
+      else if (event.key === "ArrowUp" || event.key === "ArrowDown") step(event.key === "ArrowUp" ? 1 : -1);
+      else if ((event.key === "ArrowLeft" || event.key === "ArrowRight") && count > 1) turn(event.key === "ArrowRight" ? 1 : -1);
+      else return;
+      event.preventDefault();
     };
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
@@ -187,15 +199,21 @@ export function Teletext({ page, go, now }: Props) {
             </button>
           ))}
         </div>
-        <div className="remote__row">
-          <button type="button" className="remote__key" aria-label="Previous subpage" disabled={count < 2} onClick={() => turn(-1)}>
+        <div className="remote__dpad">
+          <button type="button" className="remote__key remote__key--up" aria-label="Next page" onClick={() => step(1)}>
+            ▴
+          </button>
+          <button type="button" className="remote__key remote__key--left" aria-label="Previous subpage" disabled={count < 2} onClick={() => turn(-1)}>
             ◂
           </button>
-          <button type="button" className="remote__key remote__key--wide" aria-pressed={hold} disabled={count < 2} onClick={() => setHold(!hold)}>
+          <button type="button" className="remote__key remote__key--hold" aria-pressed={hold} disabled={count < 2} onClick={() => setHold(!hold)}>
             Hold
           </button>
-          <button type="button" className="remote__key" aria-label="Next subpage" disabled={count < 2} onClick={() => turn(1)}>
+          <button type="button" className="remote__key remote__key--right" aria-label="Next subpage" disabled={count < 2} onClick={() => turn(1)}>
             ▸
+          </button>
+          <button type="button" className="remote__key remote__key--down" aria-label="Previous page" onClick={() => step(-1)}>
+            ▾
           </button>
         </div>
         <button

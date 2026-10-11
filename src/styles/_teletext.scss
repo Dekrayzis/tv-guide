@@ -341,12 +341,34 @@
     @include phone { grid-template-columns: repeat(5, 1fr); > :last-child { grid-column: auto; } }
   }
 
-  &__row {
+  // Up and down change page; left and right turn subpages; Hold sits in the middle.
+  &__dpad {
     display: grid;
+    grid-template-areas:
+      ". up ."
+      "left hold right"
+      ". down .";
     grid-template-columns: auto 1fr auto;
-    gap: 0.5rem;
+    gap: 0.35rem;
+    justify-items: center;
+    margin-top: 0.5rem;
+
+    .remote__key:not(.remote__key--hold) { font-size: 1.25rem; line-height: 1; }
 
     @include phone { grid-column: 1 / -1; }
+
+    .remote__key--up { grid-area: up; }
+    .remote__key--down { grid-area: down; }
+    .remote__key--left { grid-area: left; }
+    .remote__key--right { grid-area: right; }
+
+    .remote__key--hold {
+      grid-area: hold;
+      justify-self: stretch;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
   }
 
   &__key {

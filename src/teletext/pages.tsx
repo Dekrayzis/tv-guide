@@ -65,6 +65,15 @@ const chunk = <T,>(items: readonly T[], size: number) =>
 
 const onAt = (list: Programme[], minute: number) => list.findIndex((p) => p.start <= minute && minute < p.end);
 
+/** Every page in service, in order: what the up and down keys step through. */
+export const pagesInService = (channels: number) => [
+  INDEX,
+  ...Array.from({ length: channels }, (_, i) => TODAY + i),
+  NOW_NEXT,
+  ...Array.from({ length: channels }, (_, i) => TOMORROW + i),
+  QUIZ,
+];
+
 export function buildPage(number: number, s: Service): Page {
   const count = s.channels.length;
   if (number === INDEX) return indexPage(s);

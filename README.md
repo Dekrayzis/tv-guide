@@ -13,7 +13,7 @@ A TV guide for eight made-up channels, with a full week of listings that's gener
   - **Pages:** 600 is the index, 601–608 each channel today, 611–618 tomorrow, 609 now and next, and 690 a quiz about tonight's schedule.
   - **Layout:** 40 × 25 characters of pixel font, stretched to a 4:3 screen, with double-height titles and mosaic block lettering.
   - **Behaviour:** the header counter rolls while a page is found, subpages turn over by themselves until you press Hold, the quiz answers stay concealed until Reveal, and the four Fastext keys run along the bottom.
-  - **Controls:** type a page number on the keyboard or the on-screen remote.
+  - **Controls:** type a page number on the keyboard or the on-screen remote. The coloured keys follow the Fastext links, up and down step through the pages, and left and right turn subpages.
 
 ## Running it
 
